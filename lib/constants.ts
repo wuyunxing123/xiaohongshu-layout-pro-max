@@ -1,4 +1,13 @@
-import type { CanvasConfig, Template } from '../types';
+import type { CanvasConfig, Template, CoverVariant } from '../types';
+
+export const COVER_VARIANTS: { id: CoverVariant; name: string }[] = [
+  { id: 'a', name: '封面 A' },
+  { id: 'b', name: '封面 B' },
+];
+
+export const getCoverImageUrl = (variant: CoverVariant): string => {
+  return `/covers/cover-${variant}.png`;
+};
 
 export const TEMPLATES: Template[] = [
   {
@@ -16,7 +25,7 @@ export const TEMPLATES: Template[] = [
   {
     id: 'single-page-flow',
     name: '单页纯享流',
-    description: '顶 415px, 左 15px, 右 8px',
+    description: '内置封面，从第 2 页开始放内容',
     icon: 'fa-file-image',
   },
   {
@@ -55,7 +64,7 @@ export type LayoutConfigMap = Record<string, Pick<CanvasConfig, LayoutKey>>;
 export const INITIAL_LAYOUTS: LayoutConfigMap = {
   'five-grid-flow':   { textX: 600, textY: 90,  subtitleX: 600, subtitleY: 170, titleFontSize: 84,  subtitleFontSize: 36, writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
   'directory-flow':   { textX: 0,   textY: 0,   subtitleX: 0,   subtitleY: 0,   titleFontSize: 0,   subtitleFontSize: 0,  writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
-  'single-page-flow': { textX: 0,   textY: 0,   subtitleX: 0,   subtitleY: 0,   titleFontSize: 0,   subtitleFontSize: 0,  writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
+  'single-page-flow': { textX: 600, textY: 250, subtitleX: 600, subtitleY: 400, titleFontSize: 96,  subtitleFontSize: 48, writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
   'poster-flow':      { textX: 200, textY: 800, subtitleX: 200, subtitleY: 1400, titleFontSize: 90, subtitleFontSize: 40, writingMode: 'vertical',  titleFontFamily: '"Noto Serif SC", serif',   titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
   'grid-flow':        { textX: 600, textY: 800, subtitleX: 600, subtitleY: 920,  titleFontSize: 110, subtitleFontSize: 48, writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
 };
@@ -81,6 +90,7 @@ export const DEFAULT_CONFIG: CanvasConfig = {
   showBg: false,
   bgColor: '#ffffff',
   bgOpacity: 0.8,
+  coverVariant: 'a',
 };
 
 export const CANVAS_WIDTH = 1200;

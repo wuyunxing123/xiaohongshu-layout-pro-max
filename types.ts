@@ -5,6 +5,8 @@ export interface ImageSlot {
   label?: string;
 }
 
+export type CoverVariant = 'a' | 'b';
+
 export interface CanvasConfig {
   backgroundColor: string;
   backgroundImage?: string;
@@ -30,6 +32,8 @@ export interface CanvasConfig {
   showBg: boolean;
   bgColor: string;
   bgOpacity: number;
+  // 内置封面选择
+  coverVariant?: CoverVariant;
 }
 
 export type TemplateId =

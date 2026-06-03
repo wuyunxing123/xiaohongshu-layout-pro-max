@@ -1,6 +1,6 @@
 import React, { RefObject } from 'react';
 import { CanvasConfig, TemplateId } from '../types';
-import { TEMPLATES, FONT_OPTIONS } from '../lib/constants';
+import { TEMPLATES, FONT_OPTIONS, COVER_VARIANTS } from '../lib/constants';
 
 interface EditorPanelProps {
   config: CanvasConfig;
@@ -187,6 +187,38 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
             ))}
           </div>
         </section>
+
+        {activeTemplateId === 'single-page-flow' && (
+          <section>
+            <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">封面选择</h2>
+            <div className="grid grid-cols-2 gap-3">
+              {COVER_VARIANTS.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => setConfig((prev) => ({ ...prev, coverVariant: v.id }))}
+                  aria-pressed={config.coverVariant === v.id}
+                  aria-label={`封面：${v.name}`}
+                  className={`p-4 rounded-2xl border-2 transition-all text-center ${
+                    config.coverVariant === v.id
+                      ? 'border-red-500 bg-red-50/20'
+                      : 'border-zinc-50 hover:border-zinc-200'
+                  }`}
+                >
+                  <div className={`w-full aspect-[3/4] rounded-xl mb-2 ${
+                    v.id === 'a' 
+                      ? 'bg-gradient-to-b from-purple-500 via-orange-500 to-green-500' 
+                      : 'bg-gradient-to-br from-slate-800 via-slate-600 to-slate-900'
+                  }`}>
+                    {v.id === 'b' && (
+                      <div className="w-full h-1.5 bg-white mt-[78%]"></div>
+                    )}
+                  </div>
+                  <span className="text-xs font-black text-zinc-900">{v.name}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section>
           <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">背景 & 纹理</h2>

@@ -7,11 +7,13 @@ export interface LayoutInfo {
 }
 
 export const calcLayoutInfo = (templateId: TemplateId, imageCount: number): LayoutInfo => {
+  if (templateId === 'single-page-flow') {
+    return { total: 1 + imageCount, perPage: 1, coverCount: 1 };
+  }
   if (imageCount === 0) return { total: 1, perPage: 1, coverCount: 0 };
 
-  if (templateId === 'directory-flow' || templateId === 'single-page-flow') {
-    const perPage = templateId === 'single-page-flow' ? 1 : 3;
-    return { total: Math.ceil(imageCount / perPage), perPage, coverCount: 0 };
+  if (templateId === 'directory-flow') {
+    return { total: Math.ceil(imageCount / 3), perPage: 3, coverCount: 0 };
   }
 
   let coverCount = 3;

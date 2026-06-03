@@ -1,8 +1,36 @@
-import type { CanvasConfig, TemplateId } from '../types';
-import { CANVAS_HEIGHT, CANVAS_WIDTH } from './constants';
+import type { CanvasConfig, TemplateId, CoverVariant } from '../types';
+import { CANVAS_HEIGHT, CANVAS_WIDTH, getCoverImageUrl } from './constants';
 import type { LayoutInfo } from './layoutCalc';
 
 export type ImageLoader = (url: string) => Promise<HTMLImageElement>;
+
+const drawCoverVariantA = (ctx: CanvasRenderingContext2D) => {
+  const W = CANVAS_WIDTH, H = CANVAS_HEIGHT;
+  const grad = ctx.createLinearGradient(0, 0, 0, H);
+  grad.addColorStop(0, '#7c3aed');
+  grad.addColorStop(0.5, '#f97316');
+  grad.addColorStop(1, '#22c55e');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+};
+
+const drawCoverVariantB = (ctx: CanvasRenderingContext2D) => {
+  const W = CANVAS_WIDTH, H = CANVAS_HEIGHT;
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, '#1e293b');
+  grad.addColorStop(0.5, '#475569');
+  grad.addColorStop(1, '#0f172a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, W, H);
+  // 画个装饰条
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, H * 0.78, W, 6);
+};
+
+export const drawBuiltinCover = (ctx: CanvasRenderingContext2D, variant: CoverVariant) => {
+  if (variant === 'a') drawCoverVariantA(ctx);
+  else drawCoverVariantB(ctx);
+};
 
 /** 在 DOM 容器坐标 (clientX/Y) 与画布坐标 (1200×1600) 之间换算。 */
 export const getCanvasCoords = (
@@ -109,24 +137,45 @@ export const drawCanvasPage = async (
   }
 
   if (currentTemplateId === 'single-page-flow') {
-    const topOffset = 415;
-    const leftMargin = 15;
-    const rightMargin = 8;
-    const bPadding = 20;
-    const img = allImages[pageIdx] ? await loadImage(allImages[pageIdx]) : null;
-    if (img) {
-      const innerW = W - leftMargin - rightMargin;
-      const innerH = H - topOffset - bPadding;
-      const aspect = img.width / img.height;
-      let drawW = innerW;
-      let drawH = drawW / aspect;
-      if (drawH > innerH) {
-        drawH = innerH;
-        drawW = drawH * aspect;
+    if (pageIdx === 0) {
+      // 封面页：先画内置封面，再尝试加载用户上传的封面图，再绘制标题
+      drawBuiltinCover(ctx, currentConfig.coverVariant ?? 'a');
+      try {
+        const coverUrl = getCoverImageUrl(currentConfig.coverVariant ?? 'a');
+        const coverImg = await loadImage(coverUrl);
+        ctx.save();
+        ctx.globalAlpha = 1;
+        const aspect = coverImg.width / coverImg.height;
+        const canvasAspect = W / H;
+        let dx, dy, dw, dh;
+        if (aspect > canvasAspect) { dh = H; dw = H * aspect; dx = -(dw - W) / 2; dy = 0; }
+        else { dw = W; dh = W / aspect; dx = 0; dy = -(dh - H) / 2; }
+        ctx.drawImage(coverImg, dx, dy, dw, dh);
+        ctx.restore();
+      } catch {
+        // 如果用户还没上传封面图，就用内置的，忽略错误
       }
-      const x = leftMargin + (innerW - drawW) / 2;
-      const y = topOffset;
-      drawRoundedImage(ctx, img, x, y, drawW, drawH, 0, 'contain', lowQuality);
+    } else {
+      // 内容页：使用用户图片，索引减1
+      const topOffset = 415;
+      const leftMargin = 15;
+      const rightMargin = 8;
+      const bPadding = 20;
+      const img = allImages[pageIdx - 1] ? await loadImage(allImages[pageIdx - 1]) : null;
+      if (img) {
+        const innerW = W - leftMargin - rightMargin;
+        const innerH = H - topOffset - bPadding;
+        const aspect = img.width / img.height;
+        let drawW = innerW;
+        let drawH = drawW / aspect;
+        if (drawH > innerH) {
+          drawH = innerH;
+          drawW = drawH * aspect;
+        }
+        const x = leftMargin + (innerW - drawW) / 2;
+        const y = topOffset;
+        drawRoundedImage(ctx, img, x, y, drawW, drawH, 0, 'contain', lowQuality);
+      }
     }
   } else if (currentTemplateId === 'directory-flow') {
     const margin = 50, colGap = 40, rowGap = 30;
@@ -217,7 +266,7 @@ export const drawCanvasPage = async (
     }
   }
 
-  if (pageIdx === 0 && currentTemplateId !== 'directory-flow' && currentTemplateId !== 'single-page-flow') {
+  if (pageIdx === 0 && currentTemplateId !== 'directory-flow') {
     ctx.save();
     ctx.fillStyle = currentConfig.titleColor;
     ctx.font = `900 ${currentConfig.titleFontSize}px ${currentConfig.titleFontFamily}`;

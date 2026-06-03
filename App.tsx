@@ -116,7 +116,7 @@ const App: React.FC = () => {
   );
 
   const isTextHidden = useMemo(
-    () => activeTemplateId === 'directory-flow' || activeTemplateId === 'single-page-flow',
+    () => activeTemplateId === 'directory-flow',
     [activeTemplateId],
   );
 
