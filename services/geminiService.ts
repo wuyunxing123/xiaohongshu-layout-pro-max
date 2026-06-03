@@ -3,7 +3,20 @@ import { GoogleGenAI, Type, GenerateContentResponse } from '@google/genai';
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const MAX_VISION_IMAGES = 4;
 
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+/**
+ * 懒加载 Gemini client：
+ * - 没有 key 时不实例化，AI 按钮调用会直接走 fallback，避免模块加载时炸掉整个 App
+ * - 有 key 时按需创建，节省首屏内存
+ */
+const getClient = (): GoogleGenAI | null => {
+  if (!API_KEY) return null;
+  try {
+    return new GoogleGenAI({ apiKey: API_KEY });
+  } catch (err) {
+    console.warn('Gemini client init failed:', err);
+    return null;
+  }
+};
 
 /**
  * 从 dataURL 中解析出 base64 主体和 MIME。
@@ -39,6 +52,11 @@ export const generateXHSTitles = async (
   }
 
   try {
+    const ai = getClient();
+    if (!ai) {
+      console.warn('VITE_GEMINI_API_KEY is not set; using fallback titles.');
+      return { title: 'PPT干货合集', subtitle: '手把手教你零基础入门' };
+    }
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: { parts },
