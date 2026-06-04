@@ -7,6 +7,14 @@ export interface ImageSlot {
 
 export type CoverVariant = 'a' | 'b';
 
+/** 封面嵌入 PPT 图片区域（比例 0-1，相对 1200×1600 画布） */
+export interface EmbedRegion {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 export interface CanvasConfig {
   backgroundColor: string;
   backgroundImage?: string;
