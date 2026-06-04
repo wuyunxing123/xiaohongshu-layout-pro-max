@@ -34,6 +34,8 @@ export interface CanvasConfig {
   bgOpacity: number;
   // 内置封面选择
   coverVariant?: CoverVariant;
+  // 封面嵌入 PPT 图片区域（按 coverVariant 分别存储，切模板自动切换）
+  coverEmbedRegion: Record<CoverVariant, EmbedRegion>;
 }
 
 export type TemplateId =

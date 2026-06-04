@@ -137,45 +137,53 @@ export const drawCanvasPage = async (
   }
 
   if (currentTemplateId === 'single-page-flow') {
-    if (pageIdx === 0) {
-      // 封面页：先画内置封面，再尝试加载用户上传的封面图，再绘制标题
-      drawBuiltinCover(ctx, currentConfig.coverVariant ?? 'a');
-      try {
-        const coverUrl = getCoverImageUrl(currentConfig.coverVariant ?? 'a');
-        const coverImg = await loadImage(coverUrl);
-        ctx.save();
-        ctx.globalAlpha = 1;
-        const aspect = coverImg.width / coverImg.height;
-        const canvasAspect = W / H;
-        let dx, dy, dw, dh;
-        if (aspect > canvasAspect) { dh = H; dw = H * aspect; dx = -(dw - W) / 2; dy = 0; }
-        else { dw = W; dh = W / aspect; dx = 0; dy = -(dh - H) / 2; }
-        ctx.drawImage(coverImg, dx, dy, dw, dh);
-        ctx.restore();
-      } catch {
-        // 如果用户还没上传封面图，就用内置的，忽略错误
-      }
-    } else {
-      // 内容页：使用用户图片，索引减1
-      const topOffset = 415;
-      const leftMargin = 15;
-      const rightMargin = 8;
-      const bPadding = 20;
-      const img = allImages[pageIdx - 1] ? await loadImage(allImages[pageIdx - 1]) : null;
-      if (img) {
-        const innerW = W - leftMargin - rightMargin;
-        const innerH = H - topOffset - bPadding;
-        const aspect = img.width / img.height;
-        let drawW = innerW;
-        let drawH = drawW / aspect;
-        if (drawH > innerH) {
-          drawH = innerH;
-          drawW = drawH * aspect;
-        }
-        const x = leftMargin + (innerW - drawW) / 2;
-        const y = topOffset;
-        drawRoundedImage(ctx, img, x, y, drawW, drawH, 0, 'contain', lowQuality);
-      }
+    // 封面 + 后续每一页：都用封面图作底图，保持视觉一致
+    const variant = currentConfig.coverVariant ?? 'a';
+
+    // 1. 画封面底图（所有页都画，包括内容页）
+    try {
+      const coverUrl = getCoverImageUrl(variant);
+      const coverImg = await loadImage(coverUrl);
+      ctx.save();
+      ctx.globalAlpha = 1;
+      const aspect = coverImg.width / coverImg.height;
+      const canvasAspect = W / H;
+      let dx, dy, dw, dh;
+      if (aspect > canvasAspect) { dh = H; dw = H * aspect; dx = -(dw - W) / 2; dy = 0; }
+      else { dw = W; dh = W / aspect; dx = 0; dy = -(dh - H) / 2; }
+      ctx.drawImage(coverImg, dx, dy, dw, dh);
+      ctx.restore();
+    } catch {
+      // 封面图加载失败时用内置渐变
+      drawBuiltinCover(ctx, variant);
+    }
+
+    // 2. 选 PPT 图片：每页对应一张图，page N 用第 N 张
+    const imgIdx = pageIdx;
+    const img = allImages[imgIdx] ? await loadImage(allImages[imgIdx]) : null;
+    if (img) {
+      // 嵌入区域由 config 按 coverVariant 分别存储
+      const region =
+        currentConfig.coverEmbedRegion?.[variant] ??
+        { x: 0.03, y: 0.27, w: 0.94, h: 0.42 };
+      const tvX = W * region.x;
+      const tvY = H * region.y;
+      const tvW = W * region.w;
+      const tvH = H * region.h;
+
+      // 计算图片在 tv 区域内的尺寸（保持比例）
+      const imgAspect = img.width / img.height;
+      const tvAspect = tvW / tvH;
+      let drawW, drawH;
+      if (imgAspect > tvAspect) { drawW = tvW; drawH = drawW / imgAspect; }
+      else { drawH = tvH; drawW = drawH * imgAspect; }
+      const x = tvX + (tvW - drawW) / 2;
+      const y = tvY + (tvH - drawH) / 2;
+
+      // 直接 drawImage（不要白底/shadow，让 PPT 图嵌进封面背景里）
+      ctx.save();
+      ctx.drawImage(img, x, y, drawW, drawH);
+      ctx.restore();
     }
   } else if (currentTemplateId === 'directory-flow') {
     const margin = 50, colGap = 40, rowGap = 30;
@@ -266,7 +274,7 @@ export const drawCanvasPage = async (
     }
   }
 
-  if (pageIdx === 0 && currentTemplateId !== 'directory-flow') {
+  if (pageIdx === 0 && currentTemplateId !== 'directory-flow' && currentTemplateId !== 'single-page-flow') {
     ctx.save();
     ctx.fillStyle = currentConfig.titleColor;
     ctx.font = `900 ${currentConfig.titleFontSize}px ${currentConfig.titleFontFamily}`;

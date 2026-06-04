@@ -8,7 +8,8 @@ export interface LayoutInfo {
 
 export const calcLayoutInfo = (templateId: TemplateId, imageCount: number): LayoutInfo => {
   if (templateId === 'single-page-flow') {
-    return { total: 1 + imageCount, perPage: 1, coverCount: 1 };
+    // 每张图对应一页（含封面），0 张时给 1 页占位
+    return { total: Math.max(1, imageCount), perPage: 1, coverCount: 0 };
   }
   if (imageCount === 0) return { total: 1, perPage: 1, coverCount: 0 };
 

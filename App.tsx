@@ -30,13 +30,44 @@ const clamp = (v: number, max: number) => Math.max(0, Math.min(max, v));
  * 还原 config 时主动丢弃 backgroundImage：
  * - base64 太大不适合 localStorage
  * - 用户刷新后重新上传底图是合理代价
+ *
+ * 顺带做一次数据迁移：旧版用扁平的 coverEmbedX/Y/W/H 四个字段，
+ * 新版改成按 coverVariant 分别存储的 coverEmbedRegion。检测到旧字段时
+ * 自动转成新结构，用户的旧设置不会丢。
  */
 const loadConfigFromStorage = (): CanvasConfig => {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEYS.config);
     if (!raw) return DEFAULT_CONFIG;
-    const parsed = JSON.parse(raw) as Partial<CanvasConfig>;
-    return { ...DEFAULT_CONFIG, ...parsed, backgroundImage: undefined };
+    const parsed = JSON.parse(raw) as Partial<CanvasConfig> & {
+      // 旧版扁平字段（迁移期临时读取）
+      coverEmbedX?: number;
+      coverEmbedY?: number;
+      coverEmbedW?: number;
+      coverEmbedH?: number;
+    };
+    let region = parsed.coverEmbedRegion as any;
+    if (
+      !region &&
+      (parsed.coverEmbedX !== undefined ||
+        parsed.coverEmbedY !== undefined ||
+        parsed.coverEmbedW !== undefined ||
+        parsed.coverEmbedH !== undefined)
+    ) {
+      const migrated = {
+        x: parsed.coverEmbedX ?? 0.03,
+        y: parsed.coverEmbedY ?? 0.27,
+        w: parsed.coverEmbedW ?? 0.94,
+        h: parsed.coverEmbedH ?? 0.42,
+      };
+      region = { a: migrated, b: { ...migrated } };
+    }
+    return {
+      ...DEFAULT_CONFIG,
+      ...parsed,
+      coverEmbedRegion: region ?? DEFAULT_CONFIG.coverEmbedRegion,
+      backgroundImage: undefined,
+    };
   } catch {
     return DEFAULT_CONFIG;
   }
@@ -116,7 +147,7 @@ const App: React.FC = () => {
   );
 
   const isTextHidden = useMemo(
-    () => activeTemplateId === 'directory-flow',
+    () => activeTemplateId === 'directory-flow' || activeTemplateId === 'single-page-flow',
     [activeTemplateId],
   );
 

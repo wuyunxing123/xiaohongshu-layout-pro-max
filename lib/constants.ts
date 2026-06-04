@@ -1,4 +1,4 @@
-import type { CanvasConfig, Template, CoverVariant } from '../types';
+import type { CanvasConfig, Template, CoverVariant, EmbedRegion } from '../types';
 
 export const COVER_VARIANTS: { id: CoverVariant; name: string }[] = [
   { id: 'a', name: '封面 A' },
@@ -91,6 +91,10 @@ export const DEFAULT_CONFIG: CanvasConfig = {
   bgColor: '#ffffff',
   bgOpacity: 0.8,
   coverVariant: 'a',
+  coverEmbedX: 0.03,
+  coverEmbedY: 0.27,
+  coverEmbedW: 0.94,
+  coverEmbedH: 0.42,
 };
 
 export const CANVAS_WIDTH = 1200;

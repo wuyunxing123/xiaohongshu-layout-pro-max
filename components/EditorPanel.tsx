@@ -205,8 +205,8 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
                   }`}
                 >
                   <div className={`w-full aspect-[3/4] rounded-xl mb-2 ${
-                    v.id === 'a' 
-                      ? 'bg-gradient-to-b from-purple-500 via-orange-500 to-green-500' 
+                    v.id === 'a'
+                      ? 'bg-gradient-to-b from-purple-500 via-orange-500 to-green-500'
                       : 'bg-gradient-to-br from-slate-800 via-slate-600 to-slate-900'
                   }`}>
                     {v.id === 'b' && (
@@ -220,47 +220,152 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
           </section>
         )}
 
-        <section>
-          <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">背景 & 纹理</h2>
-          <div className="bg-zinc-50 rounded-3xl p-6 border border-zinc-100 space-y-5">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white rounded-2xl p-4 border border-zinc-100">
-                <span className="text-[9px] font-bold block mb-3 uppercase text-zinc-400">背景色</span>
-                <input
-                  type="color"
-                  value={config.backgroundColor}
-                  onChange={(e) => setConfig((prev) => ({ ...prev, backgroundColor: e.target.value }))}
-                  className="w-full h-10 rounded-xl cursor-pointer bg-white border border-zinc-200 p-1"
-                  aria-label="画布背景色"
-                />
-              </div>
-              <div className="bg-white rounded-2xl p-4 border border-zinc-100">
-                <span className="text-[9px] font-bold block mb-3 uppercase text-zinc-400">
-                  底图透明 ({Math.round(config.bgOpacity * 100)}%)
-                </span>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={config.bgOpacity}
-                  onChange={(e) => setConfig((prev) => ({ ...prev, bgOpacity: Number(e.target.value) }))}
-                  className="w-full accent-red-500 mt-2"
-                  aria-label="底图透明度"
-                />
-              </div>
+        {activeTemplateId === 'single-page-flow' && (
+          <section>
+            <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">
+              PPT 嵌入位置
+              <span className="ml-2 text-[9px] text-red-500 normal-case font-bold">
+                封面 {config.coverVariant === 'b' ? 'B' : 'A'}
+              </span>
+            </h2>
+            <div className="bg-zinc-50 rounded-3xl p-6 border border-zinc-100 space-y-4">
+              {(() => {
+                const variant = config.coverVariant ?? 'a';
+                // 兜底：HMR 状态残留 / 旧 localStorage 缺字段时用默认区域
+                const region = config.coverEmbedRegion?.[variant] ?? {
+                  x: 0.03,
+                  y: 0.27,
+                  w: 0.94,
+                  h: 0.42,
+                };
+                const update = (patch: Partial<typeof region>) =>
+                  setConfig((prev) => ({
+                    ...prev,
+                    coverEmbedRegion: {
+                      ...prev.coverEmbedRegion,
+                      [prev.coverVariant ?? 'a']: { ...prev.coverEmbedRegion[prev.coverVariant ?? 'a'], ...patch },
+                    },
+                  }));
+                return (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-white rounded-2xl p-4 border border-zinc-100">
+                        <label className="text-[9px] font-bold text-zinc-400 uppercase mb-2 block">
+                          左边距 ({Math.round(region.x * 100)}%)
+                        </label>
+                        <input
+                          type="range" min="0" max="0.5" step="0.005"
+                          value={region.x}
+                          onChange={(e) => update({ x: Number(e.target.value) })}
+                          className="w-full accent-red-500"
+                          aria-label="PPT 嵌入左边距"
+                        />
+                      </div>
+                      <div className="bg-white rounded-2xl p-4 border border-zinc-100">
+                        <label className="text-[9px] font-bold text-zinc-400 uppercase mb-2 block">
+                          上边距 ({Math.round(region.y * 100)}%)
+                        </label>
+                        <input
+                          type="range" min="0" max="0.6" step="0.005"
+                          value={region.y}
+                          onChange={(e) => update({ y: Number(e.target.value) })}
+                          className="w-full accent-red-500"
+                          aria-label="PPT 嵌入上边距"
+                        />
+                      </div>
+                      <div className="bg-white rounded-2xl p-4 border border-zinc-100">
+                        <label className="text-[9px] font-bold text-zinc-400 uppercase mb-2 block">
+                          宽度 ({Math.round(region.w * 100)}%)
+                        </label>
+                        <input
+                          type="range" min="0.3" max="1" step="0.005"
+                          value={region.w}
+                          onChange={(e) => update({ w: Number(e.target.value) })}
+                          className="w-full accent-red-500"
+                          aria-label="PPT 嵌入宽度"
+                        />
+                      </div>
+                      <div className="bg-white rounded-2xl p-4 border border-zinc-100">
+                        <label className="text-[9px] font-bold text-zinc-400 uppercase mb-2 block">
+                          高度 ({Math.round(region.h * 100)}%)
+                        </label>
+                        <input
+                          type="range" min="0.2" max="0.6" step="0.005"
+                          value={region.h}
+                          onChange={(e) => update({ h: Number(e.target.value) })}
+                          className="w-full accent-red-500"
+                          aria-label="PPT 嵌入高度"
+                        />
+                      </div>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setConfig((prev) => ({
+                          ...prev,
+                          coverEmbedRegion: {
+                            ...prev.coverEmbedRegion,
+                            [prev.coverVariant ?? 'a']:
+                              prev.coverVariant === 'b'
+                                ? { x: 0.05, y: 0.30, w: 0.90, h: 0.40 }
+                                : { x: 0.03, y: 0.27, w: 0.94, h: 0.42 },
+                          },
+                        }))
+                      }
+                      className="w-full py-3 bg-white border-2 border-zinc-200 text-zinc-900 rounded-2xl text-[10px] font-black hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all flex items-center justify-center gap-2"
+                      aria-label="重置当前封面嵌入区域为默认值"
+                    >
+                      <i className="fas fa-undo"></i>重置封面 {variant === 'b' ? 'B' : 'A'} 为默认
+                    </button>
+                  </>
+                );
+              })()}
             </div>
-            <button
-              onClick={() => bgInputRef.current?.click()}
-              className="w-full py-4 bg-zinc-900 text-white rounded-2xl text-[10px] font-black hover:bg-black flex items-center justify-center gap-2 shadow-lg"
-              aria-label={config.backgroundImage ? '替换底图' : '上传底图'}
-            >
-              <i className="fas fa-image"></i>
-              {config.backgroundImage ? '替换底图' : '上传底图'}
-            </button>
-            <input ref={bgInputRef} type="file" className="hidden" accept="image/*" onChange={onBgUpload} />
-          </div>
-        </section>
+          </section>
+        )}
+
+        {activeTemplateId !== 'single-page-flow' && (
+          <section>
+            <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">背景 & 纹理</h2>
+            <div className="bg-zinc-50 rounded-3xl p-6 border border-zinc-100 space-y-5">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-white rounded-2xl p-4 border border-zinc-100">
+                  <span className="text-[9px] font-bold block mb-3 uppercase text-zinc-400">背景色</span>
+                  <input
+                    type="color"
+                    value={config.backgroundColor}
+                    onChange={(e) => setConfig((prev) => ({ ...prev, backgroundColor: e.target.value }))}
+                    className="w-full h-10 rounded-xl cursor-pointer bg-white border border-zinc-200 p-1"
+                    aria-label="画布背景色"
+                  />
+                </div>
+                <div className="bg-white rounded-2xl p-4 border border-zinc-100">
+                  <span className="text-[9px] font-bold block mb-3 uppercase text-zinc-400">
+                    底图透明 ({Math.round(config.bgOpacity * 100)}%)
+                  </span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={config.bgOpacity}
+                    onChange={(e) => setConfig((prev) => ({ ...prev, bgOpacity: Number(e.target.value) }))}
+                    className="w-full accent-red-500 mt-2"
+                    aria-label="底图透明度"
+                  />
+                </div>
+              </div>
+              <button
+                onClick={() => bgInputRef.current?.click()}
+                className="w-full py-4 bg-zinc-900 text-white rounded-2xl text-[10px] font-black hover:bg-black flex items-center justify-center gap-2 shadow-lg"
+                aria-label={config.backgroundImage ? '替换底图' : '上传底图'}
+              >
+                <i className="fas fa-image"></i>
+                {config.backgroundImage ? '替换底图' : '上传底图'}
+              </button>
+              <input ref={bgInputRef} type="file" className="hidden" accept="image/*" onChange={onBgUpload} />
+            </div>
+          </section>
+        )}
 
         <section>
           <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">素材管理</h2>
