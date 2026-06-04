@@ -40,6 +40,12 @@ export const TEMPLATES: Template[] = [
     description: '首页左右边距 35px，双图大尺寸',
     icon: 'fa-columns',
   },
+  {
+    id: 'double-brand-flow',
+    name: '双图品牌流',
+    description: '上下双图，标题在顶，副标题在底',
+    icon: 'fa-stream',
+  },
 ];
 
 export const FONT_OPTIONS = [
@@ -67,6 +73,7 @@ export const INITIAL_LAYOUTS: LayoutConfigMap = {
   'single-page-flow': { textX: 600, textY: 250, subtitleX: 600, subtitleY: 400, titleFontSize: 96,  subtitleFontSize: 48, writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
   'poster-flow':      { textX: 200, textY: 800, subtitleX: 200, subtitleY: 1400, titleFontSize: 90, subtitleFontSize: 40, writingMode: 'vertical',  titleFontFamily: '"Noto Serif SC", serif',   titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
   'grid-flow':        { textX: 600, textY: 800, subtitleX: 600, subtitleY: 920,  titleFontSize: 110, subtitleFontSize: 48, writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
+  'double-brand-flow':{ textX: 600, textY: 130, subtitleX: 600, subtitleY: 1500,titleFontSize: 80,  subtitleFontSize: 32, writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
 };
 
 export const DEFAULT_CONFIG: CanvasConfig = {
@@ -91,10 +98,11 @@ export const DEFAULT_CONFIG: CanvasConfig = {
   bgColor: '#ffffff',
   bgOpacity: 0.8,
   coverVariant: 'a',
-  coverEmbedX: 0.03,
-  coverEmbedY: 0.27,
-  coverEmbedW: 0.94,
-  coverEmbedH: 0.42,
+  coverEmbedRegion: {
+    a: { x: 0.03, y: 0.27, w: 0.94, h: 0.42 },
+    b: { x: 0.05, y: 0.30, w: 0.90, h: 0.40 },
+  },
+  brandText: '星辰原创课件',
 };
 
 export const CANVAS_WIDTH = 1200;

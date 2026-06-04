@@ -66,6 +66,24 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
       </div>
 
       <div className="space-y-10 flex-1">
+        {activeTemplateId === 'double-brand-flow' && (
+          <section>
+            <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">品牌标识</h2>
+            <div className="bg-zinc-50 rounded-3xl p-6 border border-zinc-100">
+              <input
+                type="text"
+                value={config.brandText}
+                onChange={(e) => setConfig((prev) => ({ ...prev, brandText: e.target.value }))}
+                placeholder="留空则不显示"
+                maxLength={20}
+                className="w-full px-5 py-4 bg-white border border-zinc-100 rounded-2xl text-sm font-black text-zinc-900 focus:ring-4 focus:ring-red-500/5 outline-none placeholder:text-zinc-300 placeholder:font-bold"
+                aria-label="品牌标识文本"
+              />
+              <p className="text-[10px] text-zinc-400 font-bold mt-2">所有页面左上角白底黑字胶囊</p>
+            </div>
+          </section>
+        )}
+
         {!isTextHidden && (
           <>
             <section>

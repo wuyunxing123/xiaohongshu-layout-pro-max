@@ -17,6 +17,15 @@ export const calcLayoutInfo = (templateId: TemplateId, imageCount: number): Layo
     return { total: Math.ceil(imageCount / 3), perPage: 3, coverCount: 0 };
   }
 
+  // 双图品牌流：固定 2 张/页，封面用 2 张（不参与自动降密度逻辑）
+  if (templateId === 'double-brand-flow') {
+    return {
+      total: 1 + Math.ceil(Math.max(0, imageCount - 2) / 2),
+      perPage: 2,
+      coverCount: 2,
+    };
+  }
+
   let coverCount = 3;
   if (templateId === 'five-grid-flow') coverCount = 5;
   else if (templateId === 'grid-flow') coverCount = 2;

@@ -32,6 +32,51 @@ export const drawBuiltinCover = (ctx: CanvasRenderingContext2D, variant: CoverVa
   else drawCoverVariantB(ctx);
 };
 
+/**
+ * 左上角品牌标识：白底黑字圆角胶囊。
+ * 留空不渲染；按文字宽度自适应。
+ */
+export const drawBrandLabel = (
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number = 50,
+  y: number = 50,
+) => {
+  if (!text) return;
+  ctx.save();
+
+  ctx.font = `800 46px "Noto Sans SC", sans-serif`;
+  ctx.textBaseline = 'middle';
+  const textWidth = ctx.measureText(text).width;
+
+  const padX = 28;
+  const padY = 18;
+  const rectW = textWidth + padX * 2;
+  const rectH = 46 + padY * 2;
+  const radius = 23;
+
+  // 轻微投影
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.12)';
+  ctx.shadowBlur = 14;
+  ctx.shadowOffsetY = 4;
+
+  // 背景
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.roundRect(x, y, rectW, rectH, radius);
+  ctx.fill();
+
+  // 文字
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.shadowOffsetY = 0;
+  ctx.fillStyle = '#1a1a1a';
+  ctx.textAlign = 'center';
+  ctx.fillText(text, x + rectW / 2, y + rectH / 2);
+
+  ctx.restore();
+};
+
 /** 在 DOM 容器坐标 (clientX/Y) 与画布坐标 (1200×1600) 之间换算。 */
 export const getCanvasCoords = (
   clientX: number,
@@ -185,6 +230,23 @@ export const drawCanvasPage = async (
       ctx.drawImage(img, x, y, drawW, drawH);
       ctx.restore();
     }
+  } else if (currentTemplateId === 'double-brand-flow') {
+    // 双图品牌流：封面和内容页都是上下两张图，顶部留给标题，底部留给副标题
+    const isCover = pageIdx === 0;
+    const startIdx = isCover ? 0 : coverCount + (pageIdx - 1) * perPage;
+    const img1 = allImages[startIdx] ? await loadImage(allImages[startIdx]) : null;
+    const img2 = allImages[startIdx + 1] ? await loadImage(allImages[startIdx + 1]) : null;
+
+    // 布局：顶部 200px 留标题 → 16:9 上图 → 30px 间隙 → 16:9 下图 → 底部留副标题
+    const hMargin = 60;
+    const imageW = W - hMargin * 2;
+    const imageH = imageW * (9 / 16);
+    const topPadding = 200;
+    const gap = 30;
+    const xPos = hMargin;
+
+    if (img1) drawRoundedImage(ctx, img1, xPos, topPadding, imageW, imageH, 16, 'cover', lowQuality);
+    if (img2) drawRoundedImage(ctx, img2, xPos, topPadding + imageH + gap, imageW, imageH, 16, 'cover', lowQuality);
   } else if (currentTemplateId === 'directory-flow') {
     const margin = 50, colGap = 40, rowGap = 30;
     const sidebarWidth = W * 0.18;
@@ -293,5 +355,10 @@ export const drawCanvasPage = async (
     const lines = currentConfig.subtitle.split('\n');
     lines.forEach((l, i) => { ctx.fillText(l, currentConfig.subtitleX, currentConfig.subtitleY + i * currentConfig.subtitleFontSize * 1.3); });
     ctx.restore();
+  }
+
+  // 品牌标识：仅双图品牌流显示，所有页面左上角白底黑字胶囊
+  if (currentTemplateId === 'double-brand-flow') {
+    drawBrandLabel(ctx, currentConfig.brandText, 50, 50);
   }
 };

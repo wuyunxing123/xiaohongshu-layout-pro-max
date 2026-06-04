@@ -36,6 +36,8 @@ export interface CanvasConfig {
   coverVariant?: CoverVariant;
   // 封面嵌入 PPT 图片区域（按 coverVariant 分别存储，切模板自动切换）
   coverEmbedRegion: Record<CoverVariant, EmbedRegion>;
+  // 品牌标识（左上角白底黑字胶囊），留空则不显示
+  brandText: string;
 }
 
 export type TemplateId =
@@ -43,7 +45,8 @@ export type TemplateId =
   | 'directory-flow'
   | 'single-page-flow'
   | 'poster-flow'
-  | 'grid-flow';
+  | 'grid-flow'
+  | 'double-brand-flow';
 
 export interface Template {
   id: TemplateId;
