@@ -1,6 +1,7 @@
 import React, { RefObject } from 'react';
 import { CanvasConfig, TemplateId } from '../types';
 import { TEMPLATES, FONT_OPTIONS, COVER_VARIANTS } from '../lib/constants';
+import type { ExportAllProgress } from '../lib/exportPng';
 
 interface EditorPanelProps {
   config: CanvasConfig;
@@ -17,10 +18,14 @@ interface EditorPanelProps {
   isProcessing: boolean;
   isPreviewLoading: boolean;
   previewPageCount: number;
+  isExportingAll: boolean;
+  exportAllProgress: ExportAllProgress | null;
   onAiGenerate: () => void;
   onUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onBgUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onExport: () => void;
+  onExportAll: () => void;
+  onResetCurrentLayout: () => void;
   onPreviewImageClick: (url: string) => void;
   uploadedImageUrls: string[];
   fileInputRef: RefObject<HTMLInputElement | null>;
@@ -42,73 +47,91 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
   isProcessing,
   isPreviewLoading,
   previewPageCount,
+  isExportingAll,
+  exportAllProgress,
   onAiGenerate,
   onUpload,
   onBgUpload,
   onExport,
+  onExportAll,
+  onResetCurrentLayout,
   onPreviewImageClick,
   uploadedImageUrls,
   fileInputRef,
   bgInputRef,
 }) => {
   return (
-    <div className="w-[440px] bg-white shadow-2xl z-20 flex flex-col p-8 border-r border-zinc-200 overflow-y-auto custom-scrollbar">
-      <div className="flex items-center gap-4 mb-10">
-        <div className="w-14 h-14 bg-red-500 rounded-2xl flex items-center justify-center text-white shadow-lg">
-          <i className="fas fa-layer-group text-2xl"></i>
+    <div className="w-[720px] min-w-[720px] bg-white shadow-2xl z-20 flex flex-col p-6 border-r border-zinc-200 overflow-hidden">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-12 h-12 bg-red-500 rounded-2xl flex items-center justify-center text-white shadow-lg">
+          <i className="fas fa-layer-group text-xl"></i>
         </div>
         <div>
-          <h1 className="text-xl font-black tracking-tight">
+          <h1 className="text-lg font-black tracking-tight">
             XH-Layout <span className="text-red-500">PRO</span>
           </h1>
           <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-tighter">实时设计引擎</p>
         </div>
       </div>
 
-      <div className="space-y-10 flex-1">
-        {activeTemplateId === 'double-brand-flow' && (
-          <section>
-            <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">品牌标识</h2>
-            <div className="bg-zinc-50 rounded-3xl p-6 border border-zinc-100">
-              <input
-                type="text"
-                value={config.brandText}
-                onChange={(e) => setConfig((prev) => ({ ...prev, brandText: e.target.value }))}
-                placeholder="留空则不显示"
-                maxLength={20}
-                className="w-full px-5 py-4 bg-white border border-zinc-100 rounded-2xl text-sm font-black text-zinc-900 focus:ring-4 focus:ring-red-500/5 outline-none placeholder:text-zinc-300 placeholder:font-bold"
-                aria-label="品牌标识文本"
-              />
-              <p className="text-[10px] text-zinc-400 font-bold mt-2">所有页面左上角白底黑字胶囊</p>
-            </div>
-          </section>
-        )}
+      <div className="grid grid-cols-2 gap-5 content-start flex-1 min-h-0">
+        <section className="col-span-2">
+          <h2 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">排版选择</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {TEMPLATES.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setActiveTemplateId(t.id)}
+                aria-pressed={activeTemplateId === t.id}
+                aria-label={`模板：${t.name}（${t.description}）`}
+                className={`flex items-center gap-3 p-3.5 rounded-2xl border-2 transition-all text-left ${
+                  activeTemplateId === t.id
+                    ? 'border-red-500 bg-red-50/20'
+                    : 'border-zinc-50 hover:border-zinc-200'
+                }`}
+              >
+                <div
+                  className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                    activeTemplateId === t.id ? 'bg-red-500 text-white' : 'bg-zinc-100 text-zinc-400'
+                  }`}
+                >
+                  <i className={`fas ${t.icon} text-sm`}></i>
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-xs font-black text-zinc-900">{t.name}</h3>
+                  <p className="text-[9px] text-zinc-400 font-medium mt-0.5 leading-tight">{t.description}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
 
         {!isTextHidden && (
           <>
             <section>
-              <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">主标题配置</h2>
-              <div className="space-y-4 bg-zinc-50 p-4 rounded-3xl border border-zinc-100">
+              <h2 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">主标题配置</h2>
+              <div className="space-y-3 bg-zinc-50 p-3 rounded-2xl border border-zinc-100">
                 <div className="relative">
                   <input
                     type="text"
                     value={localTitle}
                     onChange={(e) => setLocalTitle(e.target.value)}
-                    className="w-full px-5 py-4 bg-white border border-zinc-100 rounded-2xl text-sm font-black focus:ring-4 focus:ring-red-500/5 outline-none"
+                    className="w-full px-4 py-3 pr-14 bg-white border border-zinc-100 rounded-xl text-sm font-black focus:ring-4 focus:ring-red-500/5 outline-none"
                     aria-label="主标题文本"
                   />
                   <button
                     onClick={onAiGenerate}
                     disabled={imageCount === 0 || isAiLoading}
-                    className="absolute right-2.5 top-2.5 bottom-2.5 px-4 bg-zinc-900 text-white rounded-xl text-[10px] font-black flex items-center gap-2 disabled:opacity-40"
+                    className="absolute right-2 top-2 h-9 w-9 bg-zinc-900 text-white rounded-lg text-[10px] font-black flex items-center justify-center disabled:opacity-40"
                     aria-label="AI 生成标题"
+                    title="AI 生成标题"
                   >
-                    {isAiLoading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-robot"></i>} AI
+                    {isAiLoading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-robot"></i>}
                   </button>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-[1fr_1fr_auto] gap-3 items-end">
                   <div>
-                    <label className="text-[9px] font-bold text-zinc-400 uppercase mb-2 block">
+                    <label className="text-[9px] font-bold text-zinc-400 uppercase mb-1.5 block">
                       字号 ({config.titleFontSize})
                     </label>
                     <input
@@ -122,12 +145,27 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="text-[9px] font-bold text-zinc-400 uppercase mb-2 block">标题颜色</label>
+                    <label className="text-[9px] font-bold text-zinc-400 uppercase mb-1.5 block">标题字体</label>
+                    <select
+                      value={config.titleFontFamily}
+                      onChange={(e) => setConfig((prev) => ({ ...prev, titleFontFamily: e.target.value }))}
+                      className="w-full h-10 px-3 bg-white border border-zinc-200 rounded-lg text-xs font-bold outline-none focus:ring-4 focus:ring-zinc-500/5 cursor-pointer"
+                      aria-label="主标题字体"
+                    >
+                      {FONT_OPTIONS.map((f) => (
+                        <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>
+                          {f.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-bold text-zinc-400 uppercase mb-1.5 block">颜色</label>
                     <input
                       type="color"
                       value={config.titleColor}
                       onChange={(e) => setConfig((prev) => ({ ...prev, titleColor: e.target.value }))}
-                      className="w-full h-8 rounded-lg cursor-pointer bg-white border border-zinc-200 p-0.5"
+                      className="w-10 h-10 rounded-lg cursor-pointer bg-white border border-zinc-200 p-0.5"
                       aria-label="主标题颜色"
                     />
                   </div>
@@ -136,17 +174,18 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
             </section>
 
             <section>
-              <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">副标题配置</h2>
-              <div className="space-y-4 bg-zinc-50 p-4 rounded-3xl border border-zinc-100">
-                <textarea
+              <h2 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">副标题配置</h2>
+              <div className="space-y-3 bg-zinc-50 p-3 rounded-2xl border border-zinc-100">
+                <input
+                  type="text"
                   value={localSubtitle}
                   onChange={(e) => setLocalSubtitle(e.target.value)}
-                  className="w-full px-5 py-4 bg-white border border-zinc-100 rounded-2xl text-xs font-bold focus:ring-4 focus:ring-red-500/5 h-24 resize-none outline-none"
+                  className="w-full px-4 py-3 bg-white border border-zinc-100 rounded-xl text-sm font-bold focus:ring-4 focus:ring-red-500/5 outline-none"
                   aria-label="副标题文本"
                 />
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-[1fr_1fr_auto] gap-3 items-end">
                   <div>
-                    <label className="text-[9px] font-bold text-zinc-400 uppercase mb-2 block">
+                    <label className="text-[9px] font-bold text-zinc-400 uppercase mb-1.5 block">
                       字号 ({config.subtitleFontSize})
                     </label>
                     <input
@@ -160,12 +199,27 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="text-[9px] font-bold text-zinc-400 uppercase mb-2 block">副标题颜色</label>
+                    <label className="text-[9px] font-bold text-zinc-400 uppercase mb-1.5 block">副标题字体</label>
+                    <select
+                      value={config.subtitleFontFamily}
+                      onChange={(e) => setConfig((prev) => ({ ...prev, subtitleFontFamily: e.target.value }))}
+                      className="w-full h-10 px-3 bg-white border border-zinc-200 rounded-lg text-xs font-bold outline-none focus:ring-4 focus:ring-zinc-500/5 cursor-pointer"
+                      aria-label="副标题字体"
+                    >
+                      {FONT_OPTIONS.map((f) => (
+                        <option key={f.value} value={f.value} style={{ fontFamily: f.value }}>
+                          {f.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-bold text-zinc-400 uppercase mb-1.5 block">颜色</label>
                     <input
                       type="color"
                       value={config.subtitleColor}
                       onChange={(e) => setConfig((prev) => ({ ...prev, subtitleColor: e.target.value }))}
-                      className="w-full h-8 rounded-lg cursor-pointer bg-white border border-zinc-200 p-0.5"
+                      className="w-10 h-10 rounded-lg cursor-pointer bg-white border border-zinc-200 p-0.5"
                       aria-label="副标题颜色"
                     />
                   </div>
@@ -175,78 +229,28 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
           </>
         )}
 
-        <section>
-          <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">排版选择</h2>
-          <div className="grid grid-cols-1 gap-3">
-            {TEMPLATES.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setActiveTemplateId(t.id)}
-                aria-pressed={activeTemplateId === t.id}
-                aria-label={`模板：${t.name}（${t.description}）`}
-                className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left ${
-                  activeTemplateId === t.id
-                    ? 'border-red-500 bg-red-50/20'
-                    : 'border-zinc-50 hover:border-zinc-200'
-                }`}
-              >
-                <div
-                  className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    activeTemplateId === t.id ? 'bg-red-500 text-white' : 'bg-zinc-100 text-zinc-400'
-                  }`}
-                >
-                  <i className={`fas ${t.icon} text-sm`}></i>
-                </div>
-                <div>
-                  <h3 className="text-xs font-black text-zinc-900">{t.name}</h3>
-                  <p className="text-[9px] text-zinc-400 font-medium mt-0.5">{t.description}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {activeTemplateId === 'single-page-flow' && (
-          <section>
-            <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">封面选择</h2>
-            <div className="grid grid-cols-2 gap-3">
-              {COVER_VARIANTS.map((v) => (
-                <button
-                  key={v.id}
-                  onClick={() => setConfig((prev) => ({ ...prev, coverVariant: v.id }))}
-                  aria-pressed={config.coverVariant === v.id}
-                  aria-label={`封面：${v.name}`}
-                  className={`p-4 rounded-2xl border-2 transition-all text-center ${
-                    config.coverVariant === v.id
-                      ? 'border-red-500 bg-red-50/20'
-                      : 'border-zinc-50 hover:border-zinc-200'
-                  }`}
-                >
-                  <div className={`w-full aspect-[3/4] rounded-xl mb-2 ${
-                    v.id === 'a'
-                      ? 'bg-gradient-to-b from-purple-500 via-orange-500 to-green-500'
-                      : 'bg-gradient-to-br from-slate-800 via-slate-600 to-slate-900'
-                  }`}>
-                    {v.id === 'b' && (
-                      <div className="w-full h-1.5 bg-white mt-[78%]"></div>
-                    )}
-                  </div>
-                  <span className="text-xs font-black text-zinc-900">{v.name}</span>
-                </button>
-              ))}
+        {activeTemplateId === 'double-brand-flow' && (
+          <section className="col-span-2">
+            <h2 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">品牌标识</h2>
+            <div className="bg-zinc-50 rounded-2xl p-4 border border-zinc-100">
+              <input
+                type="text"
+                value={config.brandText}
+                onChange={(e) => setConfig((prev) => ({ ...prev, brandText: e.target.value }))}
+                placeholder="留空则不显示"
+                maxLength={20}
+                className="w-full px-4 py-3 bg-white border border-zinc-100 rounded-xl text-sm font-black text-zinc-900 focus:ring-4 focus:ring-red-500/5 outline-none placeholder:text-zinc-300 placeholder:font-bold"
+                aria-label="品牌标识文本"
+              />
+              <p className="text-[10px] text-zinc-400 font-bold mt-2">所有页面左上角白底黑字胶囊</p>
             </div>
           </section>
         )}
 
         {activeTemplateId === 'single-page-flow' && (
-          <section>
-            <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">
-              PPT 嵌入位置
-              <span className="ml-2 text-[9px] text-red-500 normal-case font-bold">
-                封面 {config.coverVariant === 'b' ? 'B' : 'A'}
-              </span>
-            </h2>
-            <div className="bg-zinc-50 rounded-3xl p-6 border border-zinc-100 space-y-4">
+          <section className="col-span-2">
+            <h2 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">封面选择 / PPT 嵌入位置</h2>
+            <div className="bg-zinc-50 rounded-2xl p-4 border border-zinc-100 space-y-3">
               {(() => {
                 const variant = config.coverVariant ?? 'a';
                 // 兜底：HMR 状态残留 / 旧 localStorage 缺字段时用默认区域
@@ -266,54 +270,119 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
                   }));
                 return (
                   <>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-white rounded-2xl p-4 border border-zinc-100">
-                        <label className="text-[9px] font-bold text-zinc-400 uppercase mb-2 block">
+                    <div className="grid grid-cols-[260px_1fr] gap-4 items-start">
+                      <div>
+                        <div className="grid grid-cols-2 gap-3">
+                          {COVER_VARIANTS.map((v) => (
+                            <button
+                              key={v.id}
+                              onClick={() => setConfig((prev) => ({ ...prev, coverVariant: v.id }))}
+                              aria-pressed={config.coverVariant === v.id}
+                              aria-label={`封面：${v.name}`}
+                              className={`p-3 rounded-2xl border-2 transition-all text-center ${
+                                config.coverVariant === v.id
+                                  ? 'border-red-500 bg-red-50/20'
+                                  : 'border-zinc-50 hover:border-zinc-200'
+                              }`}
+                            >
+                              <div className={`w-full aspect-[3/4] rounded-xl mb-2 ${
+                                v.id === 'a'
+                                  ? 'bg-gradient-to-b from-purple-500 via-orange-500 to-green-500'
+                                  : 'bg-gradient-to-br from-slate-800 via-slate-600 to-slate-900'
+                              }`}>
+                                {v.id === 'b' && (
+                                  <div className="w-full h-1.5 bg-white mt-[78%]"></div>
+                                )}
+                              </div>
+                              <span className="text-xs font-black text-zinc-900">{v.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-white rounded-xl p-3 border border-zinc-100">
+                          <label className="text-[9px] font-bold text-zinc-400 uppercase mb-1.5 block">
                           左边距 ({Math.round(region.x * 100)}%)
-                        </label>
-                        <input
-                          type="range" min="0" max="0.5" step="0.005"
-                          value={region.x}
-                          onChange={(e) => update({ x: Number(e.target.value) })}
-                          className="w-full accent-red-500"
-                          aria-label="PPT 嵌入左边距"
-                        />
-                      </div>
-                      <div className="bg-white rounded-2xl p-4 border border-zinc-100">
-                        <label className="text-[9px] font-bold text-zinc-400 uppercase mb-2 block">
+                          </label>
+                          <input
+                            type="range" min="0" max="0.5" step="0.005"
+                            value={region.x}
+                            onChange={(e) => update({ x: Number(e.target.value) })}
+                            className="w-full accent-red-500"
+                            aria-label="PPT 嵌入左边距"
+                          />
+                        </div>
+                        <div className="bg-white rounded-xl p-3 border border-zinc-100">
+                          <label className="text-[9px] font-bold text-zinc-400 uppercase mb-1.5 block">
                           上边距 ({Math.round(region.y * 100)}%)
-                        </label>
-                        <input
-                          type="range" min="0" max="0.6" step="0.005"
-                          value={region.y}
-                          onChange={(e) => update({ y: Number(e.target.value) })}
-                          className="w-full accent-red-500"
-                          aria-label="PPT 嵌入上边距"
-                        />
-                      </div>
-                      <div className="bg-white rounded-2xl p-4 border border-zinc-100">
-                        <label className="text-[9px] font-bold text-zinc-400 uppercase mb-2 block">
+                          </label>
+                          <input
+                            type="range" min="0" max="0.7" step="0.005"
+                            value={region.y}
+                            onChange={(e) => {
+                              // 调整上边距时保持下边距不变
+                              const newY = Number(e.target.value);
+                              const bottom = 1 - region.y - region.h;
+                              const newH = Math.max(0.05, 1 - newY - bottom);
+                              update({ y: newY, h: newH });
+                            }}
+                            className="w-full accent-red-500"
+                            aria-label="PPT 嵌入上边距"
+                          />
+                        </div>
+                        <div className="bg-white rounded-xl p-3 border border-zinc-100">
+                          <label className="text-[9px] font-bold text-zinc-400 uppercase mb-1.5 block">
                           宽度 ({Math.round(region.w * 100)}%)
-                        </label>
-                        <input
-                          type="range" min="0.3" max="1" step="0.005"
-                          value={region.w}
-                          onChange={(e) => update({ w: Number(e.target.value) })}
-                          className="w-full accent-red-500"
-                          aria-label="PPT 嵌入宽度"
-                        />
+                          </label>
+                          <input
+                            type="range" min="0.3" max="1" step="0.005"
+                            value={region.w}
+                            onChange={(e) => update({ w: Number(e.target.value) })}
+                            className="w-full accent-red-500"
+                            aria-label="PPT 嵌入宽度"
+                          />
+                        </div>
+                        <div className="bg-white rounded-xl p-3 border border-zinc-100">
+                          <label className="text-[9px] font-bold text-zinc-400 uppercase mb-1.5 block">
+                          下边距 ({Math.round((1 - region.y - region.h) * 100)}%)
+                          </label>
+                          <input
+                            type="range" min="0" max="0.7" step="0.005"
+                            value={1 - region.y - region.h}
+                            onChange={(e) => {
+                              // 调整下边距时保持上边距不变
+                              const newBottom = Number(e.target.value);
+                              const newH = Math.max(0.05, 1 - region.y - newBottom);
+                              update({ h: newH });
+                            }}
+                            className="w-full accent-red-500"
+                            aria-label="PPT 嵌入下边距"
+                          />
+                        </div>
                       </div>
-                      <div className="bg-white rounded-2xl p-4 border border-zinc-100">
-                        <label className="text-[9px] font-bold text-zinc-400 uppercase mb-2 block">
-                          高度 ({Math.round(region.h * 100)}%)
-                        </label>
-                        <input
-                          type="range" min="0.2" max="0.6" step="0.005"
-                          value={region.h}
-                          onChange={(e) => update({ h: Number(e.target.value) })}
-                          className="w-full accent-red-500"
-                          aria-label="PPT 嵌入高度"
-                        />
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={() => update({ fit: 'fill' })}
+                          aria-pressed={(region.fit ?? 'fill') === 'fill'}
+                          className={`flex-1 py-2.5 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 ${
+                            (region.fit ?? 'fill') === 'fill'
+                              ? 'bg-red-500 text-white border-2 border-red-500'
+                              : 'bg-white text-zinc-500 border-2 border-zinc-200 hover:border-zinc-300'
+                          }`}
+                        >
+                          <i className="fas fa-expand"></i>拉伸填充
+                        </button>
+                        <button
+                          onClick={() => update({ fit: 'contain' })}
+                          aria-pressed={(region.fit ?? 'fill') === 'contain'}
+                          className={`flex-1 py-2.5 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 ${
+                            (region.fit ?? 'fill') === 'contain'
+                              ? 'bg-red-500 text-white border-2 border-red-500'
+                              : 'bg-white text-zinc-500 border-2 border-zinc-200 hover:border-zinc-300'
+                          }`}
+                        >
+                          <i className="fas fa-compress-arrows-alt"></i>等比缩放
+                        </button>
                       </div>
                     </div>
                     <button
@@ -324,12 +393,12 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
                             ...prev.coverEmbedRegion,
                             [prev.coverVariant ?? 'a']:
                               prev.coverVariant === 'b'
-                                ? { x: 0.05, y: 0.30, w: 0.90, h: 0.40 }
-                                : { x: 0.03, y: 0.27, w: 0.94, h: 0.42 },
+                                ? { x: 0.05, y: 0.30, w: 0.90, h: 0.40, fit: 'fill' }
+                                : { x: 0.03, y: 0.27, w: 0.94, h: 0.42, fit: 'fill' },
                           },
                         }))
                       }
-                      className="w-full py-3 bg-white border-2 border-zinc-200 text-zinc-900 rounded-2xl text-[10px] font-black hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all flex items-center justify-center gap-2"
+                      className="w-full py-2.5 bg-white border-2 border-zinc-200 text-zinc-900 rounded-xl text-[10px] font-black hover:bg-zinc-900 hover:text-white hover:border-zinc-900 transition-all flex items-center justify-center gap-2"
                       aria-label="重置当前封面嵌入区域为默认值"
                     >
                       <i className="fas fa-undo"></i>重置封面 {variant === 'b' ? 'B' : 'A'} 为默认
@@ -343,11 +412,11 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
 
         {activeTemplateId !== 'single-page-flow' && (
           <section>
-            <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">背景 & 纹理</h2>
-            <div className="bg-zinc-50 rounded-3xl p-6 border border-zinc-100 space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white rounded-2xl p-4 border border-zinc-100">
-                  <span className="text-[9px] font-bold block mb-3 uppercase text-zinc-400">背景色</span>
+            <h2 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">背景 & 纹理</h2>
+            <div className="bg-zinc-50 rounded-2xl p-4 border border-zinc-100 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white rounded-xl p-3 border border-zinc-100">
+                  <span className="text-[9px] font-bold block mb-2 uppercase text-zinc-400">背景色</span>
                   <input
                     type="color"
                     value={config.backgroundColor}
@@ -356,8 +425,8 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
                     aria-label="画布背景色"
                   />
                 </div>
-                <div className="bg-white rounded-2xl p-4 border border-zinc-100">
-                  <span className="text-[9px] font-bold block mb-3 uppercase text-zinc-400">
+                <div className="bg-white rounded-xl p-3 border border-zinc-100">
+                  <span className="text-[9px] font-bold block mb-2 uppercase text-zinc-400">
                     底图透明 ({Math.round(config.bgOpacity * 100)}%)
                   </span>
                   <input
@@ -374,7 +443,7 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
               </div>
               <button
                 onClick={() => bgInputRef.current?.click()}
-                className="w-full py-4 bg-zinc-900 text-white rounded-2xl text-[10px] font-black hover:bg-black flex items-center justify-center gap-2 shadow-lg"
+                className="w-full py-3 bg-zinc-900 text-white rounded-xl text-[10px] font-black hover:bg-black flex items-center justify-center gap-2 shadow-lg"
                 aria-label={config.backgroundImage ? '替换底图' : '上传底图'}
               >
                 <i className="fas fa-image"></i>
@@ -386,17 +455,17 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
         )}
 
         <section>
-          <h2 className="text-[11px] font-black text-zinc-500 uppercase tracking-widest mb-4">素材管理</h2>
-          <div className="bg-zinc-50 rounded-3xl p-6 border border-zinc-100 space-y-4">
+          <h2 className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">素材管理</h2>
+          <div className="bg-zinc-50 rounded-2xl p-4 border border-zinc-100 space-y-3">
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="w-full bg-white border-2 border-zinc-900 text-zinc-900 py-4 rounded-2xl font-black hover:bg-zinc-900 hover:text-white text-xs flex items-center justify-center gap-2"
+              className="w-full bg-white border-2 border-zinc-900 text-zinc-900 py-3 rounded-xl font-black hover:bg-zinc-900 hover:text-white text-xs flex items-center justify-center gap-2"
             >
               <i className="fas fa-plus-circle"></i>导入 PPT 截图
             </button>
             <input ref={fileInputRef} type="file" multiple className="hidden" accept="image/*" onChange={onUpload} />
             {uploadedImageUrls.length > 0 && (
-              <div className="grid grid-cols-4 gap-3 mt-4 max-h-48 overflow-y-auto p-1 custom-scrollbar">
+              <div className="grid grid-cols-4 gap-2 mt-2 max-h-28 overflow-y-auto p-0.5 custom-scrollbar">
                 {uploadedImageUrls.map((url, idx) => (
                   <div
                     key={idx}
@@ -413,19 +482,40 @@ const EditorPanel: React.FC<EditorPanelProps> = ({
         </section>
       </div>
 
-      <button
-        disabled={imageCount === 0 || isProcessing || isPreviewLoading}
-        onClick={onExport}
-        aria-label="一键批量导出图集为压缩包"
-        className={`mt-10 w-full py-6 rounded-3xl font-black transition-all shadow-2xl flex items-center justify-center gap-3 text-lg ${
-          imageCount === 0 || isProcessing || isPreviewLoading
-            ? 'bg-zinc-100 text-zinc-300'
-            : 'bg-red-500 text-white hover:bg-red-600'
-        }`}
-      >
-        {isProcessing ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-cloud-download-alt"></i>}
-        <span>一键批量导出图集</span>
-      </button>
+      <div className="mt-5 grid grid-cols-2 gap-3">
+
+        <button
+          disabled={imageCount === 0 || isProcessing || isPreviewLoading || isExportingAll}
+          onClick={onExport}
+          aria-label="一键批量导出图集为压缩包"
+          className={`w-full py-4 rounded-2xl font-black transition-all shadow-xl flex items-center justify-center gap-2 text-sm ${
+            imageCount === 0 || isProcessing || isPreviewLoading || isExportingAll
+              ? 'bg-zinc-100 text-zinc-300'
+              : 'bg-red-500 text-white hover:bg-red-600'
+          }`}
+        >
+          {isProcessing ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-cloud-download-alt"></i>}
+          <span>一键批量导出图集</span>
+        </button>
+        <button
+          disabled={imageCount === 0 || isProcessing || isPreviewLoading || isExportingAll}
+          onClick={onExportAll}
+          aria-label="一键导出全部排版：按每种模板分别渲染并归类到子文件夹"
+          title="遍历全部模板并按模板名归类到子文件夹，一次性打包下载"
+          className={`w-full py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2 text-sm border-2 ${
+            imageCount === 0 || isProcessing || isPreviewLoading || isExportingAll
+              ? 'bg-zinc-50 text-zinc-300 border-zinc-100'
+              : 'bg-zinc-900 text-white border-zinc-900 hover:bg-black'
+          }`}
+        >
+          {isExportingAll ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-box-archive"></i>}
+          <span>
+            {isExportingAll && exportAllProgress
+              ? `导出中 ${exportAllProgress.currentTemplate}/${exportAllProgress.totalTemplates} · ${exportAllProgress.templateName}（${exportAllProgress.pageCurrent}/${exportAllProgress.pageTotal}）`
+              : '一键导出全部排版（按模板归类）'}
+          </span>
+        </button>
+      </div>
     </div>
   );
 };

@@ -216,18 +216,22 @@ export const drawCanvasPage = async (
       const tvW = W * region.w;
       const tvH = H * region.h;
 
-      // 计算图片在 tv 区域内的尺寸（保持比例）
-      const imgAspect = img.width / img.height;
-      const tvAspect = tvW / tvH;
-      let drawW, drawH;
-      if (imgAspect > tvAspect) { drawW = tvW; drawH = drawW / imgAspect; }
-      else { drawH = tvH; drawW = drawH * imgAspect; }
-      const x = tvX + (tvW - drawW) / 2;
-      const y = tvY + (tvH - drawH) / 2;
-
-      // 直接 drawImage（不要白底/shadow，让 PPT 图嵌进封面背景里）
+      const fit = region.fit ?? 'fill';
       ctx.save();
-      ctx.drawImage(img, x, y, drawW, drawH);
+      if (fit === 'contain') {
+        // 等比缩放：保持图片比例，居中放入嵌入区域
+        const imgAspect = img.width / img.height;
+        const tvAspect = tvW / tvH;
+        let drawW, drawH;
+        if (imgAspect > tvAspect) { drawW = tvW; drawH = drawW / imgAspect; }
+        else { drawH = tvH; drawW = drawH * imgAspect; }
+        const x = tvX + (tvW - drawW) / 2;
+        const y = tvY + (tvH - drawH) / 2;
+        ctx.drawImage(img, x, y, drawW, drawH);
+      } else {
+        // 拉伸填充：图片拉伸至完全覆盖嵌入区域
+        ctx.drawImage(img, tvX, tvY, tvW, tvH);
+      }
       ctx.restore();
     }
   } else if (currentTemplateId === 'double-brand-flow') {
@@ -351,7 +355,7 @@ export const drawCanvasPage = async (
       ctx.fillText(currentConfig.title, currentConfig.textX, currentConfig.textY);
     }
     ctx.fillStyle = currentConfig.subtitleColor;
-    ctx.font = `700 ${currentConfig.subtitleFontSize}px ${currentConfig.titleFontFamily}`;
+    ctx.font = `700 ${currentConfig.subtitleFontSize}px ${currentConfig.subtitleFontFamily}`;
     const lines = currentConfig.subtitle.split('\n');
     lines.forEach((l, i) => { ctx.fillText(l, currentConfig.subtitleX, currentConfig.subtitleY + i * currentConfig.subtitleFontSize * 1.3); });
     ctx.restore();

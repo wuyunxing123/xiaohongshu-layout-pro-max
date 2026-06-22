@@ -13,6 +13,8 @@ export interface EmbedRegion {
   y: number;
   w: number;
   h: number;
+  /** 图片填充方式：fill=拉伸填充（默认），contain=等比缩放居中 */
+  fit?: 'fill' | 'contain';
 }
 
 export interface CanvasConfig {
@@ -27,6 +29,7 @@ export interface CanvasConfig {
   titleFontSize: number;
   subtitleFontSize: number;
   titleFontFamily: string;
+  subtitleFontFamily: string;
   // 标题位置 (基于 1200x1600 画布坐标)
   textX: number;
   textY: number;

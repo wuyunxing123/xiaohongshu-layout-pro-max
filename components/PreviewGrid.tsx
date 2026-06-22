@@ -30,10 +30,10 @@ const PreviewGrid: React.FC<PreviewGridProps> = ({
   onTextHandleMouseDown,
 }) => {
   return (
-    <div className="flex-1 flex flex-col overflow-y-auto custom-scrollbar bg-zinc-100/30 p-8 pb-24">
-      <div className="max-w-6xl mx-auto w-full">
-        <header className="mb-10 flex flex-col gap-2">
-          <h2 className="text-3xl font-black text-zinc-900 tracking-tight flex items-center gap-3">
+    <div className="flex-1 min-w-0 flex flex-col overflow-y-auto custom-scrollbar bg-zinc-100/30 p-5 pb-16">
+      <div className="max-w-5xl mx-auto w-full">
+        <header className="mb-6 flex flex-col gap-1.5">
+          <h2 className="text-2xl font-black text-zinc-900 tracking-tight flex items-center gap-3">
             设计画廊
             <span className="text-sm font-bold text-zinc-400 px-3 py-1 bg-white border border-zinc-200 rounded-full">
               {activeTemplateName}
@@ -44,16 +44,16 @@ const PreviewGrid: React.FC<PreviewGridProps> = ({
           </p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {previewUrls.map((url, idx) => (
-            <div key={idx} className="group flex flex-col gap-4 relative">
+            <div key={idx} className="group flex flex-col gap-3 relative">
               <div className="flex justify-between px-2 text-[10px] font-black text-zinc-400 uppercase tracking-widest">
                 <span>{idx === 0 && !isTextHidden ? 'COVER (封面)' : `PAGE ${idx + 1}`}</span>
               </div>
               <div
                 ref={idx === 0 ? previewContainerRef : undefined}
                 onClick={() => onZoom(idx)}
-                className="relative shadow-2xl rounded-3xl overflow-hidden bg-white ring-1 ring-zinc-200/50 transition-all duration-700 transform group-hover:scale-[1.05] group-hover:-translate-y-4 group-hover:shadow-[0_60px_90px_-25px_rgba(0,0,0,0.35)] cursor-zoom-in"
+                className="relative shadow-xl rounded-3xl overflow-hidden bg-white ring-1 ring-zinc-200/50 transition-all duration-500 transform group-hover:scale-[1.03] group-hover:-translate-y-2 group-hover:shadow-[0_35px_60px_-20px_rgba(0,0,0,0.28)] cursor-zoom-in"
               >
                 <img src={url} alt={`Preview ${idx + 1}`} className="w-full h-auto block select-none" />
                 {idx === 0 && !isTextHidden && (

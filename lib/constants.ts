@@ -63,17 +63,18 @@ export type LayoutKey =
   | 'subtitleX' | 'subtitleY'
   | 'titleFontSize' | 'subtitleFontSize'
   | 'writingMode' | 'titleFontFamily'
-  | 'titleColor' | 'subtitleColor';
+  | 'titleColor' | 'subtitleColor'
+  | 'subtitleFontFamily';
 
 export type LayoutConfigMap = Record<string, Pick<CanvasConfig, LayoutKey>>;
 
 export const INITIAL_LAYOUTS: LayoutConfigMap = {
-  'five-grid-flow':   { textX: 600, textY: 90,  subtitleX: 600, subtitleY: 170, titleFontSize: 84,  subtitleFontSize: 36, writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
-  'directory-flow':   { textX: 0,   textY: 0,   subtitleX: 0,   subtitleY: 0,   titleFontSize: 0,   subtitleFontSize: 0,  writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
-  'single-page-flow': { textX: 600, textY: 250, subtitleX: 600, subtitleY: 400, titleFontSize: 96,  subtitleFontSize: 48, writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
-  'poster-flow':      { textX: 200, textY: 800, subtitleX: 200, subtitleY: 1400, titleFontSize: 90, subtitleFontSize: 40, writingMode: 'vertical',  titleFontFamily: '"Noto Serif SC", serif',   titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
-  'grid-flow':        { textX: 600, textY: 800, subtitleX: 600, subtitleY: 920,  titleFontSize: 110, subtitleFontSize: 48, writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
-  'double-brand-flow':{ textX: 600, textY: 130, subtitleX: 600, subtitleY: 1500,titleFontSize: 80,  subtitleFontSize: 32, writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
+  'five-grid-flow':   { textX: 600, textY: 90,  subtitleX: 600, subtitleY: 170, titleFontSize: 84,  subtitleFontSize: 36, writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif',  subtitleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
+  'directory-flow':   { textX: 0,   textY: 0,   subtitleX: 0,   subtitleY: 0,   titleFontSize: 0,   subtitleFontSize: 0,  writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif',  subtitleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
+  'single-page-flow': { textX: 600, textY: 250, subtitleX: 600, subtitleY: 400, titleFontSize: 96,  subtitleFontSize: 48, writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif',  subtitleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
+  'poster-flow':      { textX: 200, textY: 800, subtitleX: 200, subtitleY: 1400, titleFontSize: 90, subtitleFontSize: 40, writingMode: 'vertical',  titleFontFamily: '"Noto Serif SC", serif',     subtitleFontFamily: '"Noto Serif SC", serif',    titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
+  'grid-flow':        { textX: 600, textY: 800, subtitleX: 600, subtitleY: 920,  titleFontSize: 110, subtitleFontSize: 48, writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif',  subtitleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
+  'double-brand-flow':{ textX: 600, textY: 130, subtitleX: 600, subtitleY: 1500,titleFontSize: 80,  subtitleFontSize: 32, writingMode: 'horizontal', titleFontFamily: '"Noto Sans SC", sans-serif',  subtitleFontFamily: '"Noto Sans SC", sans-serif', titleColor: '#1a1a1a', subtitleColor: '#4b5563' },
 };
 
 export const DEFAULT_CONFIG: CanvasConfig = {
@@ -87,6 +88,7 @@ export const DEFAULT_CONFIG: CanvasConfig = {
   titleFontSize: 84,
   subtitleFontSize: 42,
   titleFontFamily: '"Noto Sans SC", sans-serif',
+  subtitleFontFamily: '"Noto Sans SC", sans-serif',
   textX: 600,
   textY: 250,
   subtitleX: 600,
@@ -99,8 +101,8 @@ export const DEFAULT_CONFIG: CanvasConfig = {
   bgOpacity: 0.8,
   coverVariant: 'a',
   coverEmbedRegion: {
-    a: { x: 0.03, y: 0.27, w: 0.94, h: 0.42 },
-    b: { x: 0.05, y: 0.30, w: 0.90, h: 0.40 },
+    a: { x: 0.03, y: 0.27, w: 0.94, h: 0.42, fit: 'fill' },
+    b: { x: 0.05, y: 0.30, w: 0.90, h: 0.40, fit: 'fill' },
   },
   brandText: '星辰原创课件',
 };
