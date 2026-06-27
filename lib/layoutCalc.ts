@@ -26,9 +26,17 @@ export const calcLayoutInfo = (templateId: TemplateId, imageCount: number): Layo
     };
   }
 
+  // 双图纯享流：封面和内容页都是上下双图，固定 2 张/页
+  if (templateId === 'grid-flow') {
+    return {
+      total: Math.max(1, 1 + Math.ceil(Math.max(0, imageCount - 2) / 2)),
+      perPage: 2,
+      coverCount: 2,
+    };
+  }
+
   let coverCount = 3;
   if (templateId === 'five-grid-flow') coverCount = 5;
-  else if (templateId === 'grid-flow') coverCount = 2;
 
   const remaining = Math.max(0, imageCount - coverCount);
   let perPage = 3;

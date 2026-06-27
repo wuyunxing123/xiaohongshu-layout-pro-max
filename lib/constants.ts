@@ -36,8 +36,8 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: 'grid-flow',
-    name: '双图大标题流',
-    description: '首页左右边距 35px，双图大尺寸',
+    name: '双图纯享流',
+    description: '首页上下双图，纯图无文字',
     icon: 'fa-columns',
   },
   {

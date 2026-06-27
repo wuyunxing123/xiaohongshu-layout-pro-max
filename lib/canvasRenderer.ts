@@ -251,6 +251,21 @@ export const drawCanvasPage = async (
 
     if (img1) drawRoundedImage(ctx, img1, xPos, topPadding, imageW, imageH, 16, 'cover', lowQuality);
     if (img2) drawRoundedImage(ctx, img2, xPos, topPadding + imageH + gap, imageW, imageH, 16, 'cover', lowQuality);
+  } else if (currentTemplateId === 'grid-flow') {
+    // 双图纯享流：封面和内容页都是上下两张 16:9 图，居中排版，无文字
+    const isCover = pageIdx === 0;
+    const startIdx = isCover ? 0 : coverCount + (pageIdx - 1) * perPage;
+    const img1 = allImages[startIdx] ? await loadImage(allImages[startIdx]) : null;
+    const img2 = allImages[startIdx + 1] ? await loadImage(allImages[startIdx + 1]) : null;
+
+    const hMargin = 35, gap = 80;
+    const mainWidth = W - hMargin * 2;
+    const mainItemH = mainWidth * (9 / 16);
+    const totalH = mainItemH * 2 + gap;
+    const startY = (H - totalH) / 2;
+
+    if (img1) drawRoundedImage(ctx, img1, hMargin, startY, mainWidth, mainItemH, 24, 'cover', lowQuality);
+    if (img2) drawRoundedImage(ctx, img2, hMargin, startY + mainItemH + gap, mainWidth, mainItemH, 24, 'cover', lowQuality);
   } else if (currentTemplateId === 'directory-flow') {
     const margin = 50, colGap = 40, rowGap = 30;
     const sidebarWidth = W * 0.18;
@@ -329,18 +344,11 @@ export const drawCanvasPage = async (
           const img = allImages[i] ? await loadImage(allImages[i]) : null;
           drawRoundedImage(ctx, img, xPos, vPadding + i * (itemH + rowGap), itemW, itemH, 24, 'cover', lowQuality);
         }
-      } else if (currentTemplateId === 'grid-flow') {
-        const hMargin = 35, vPadding = 45;
-        const mainWidth = W - hMargin * 2, mainItemH = mainWidth * (9 / 16);
-        const img1 = allImages[0] ? await loadImage(allImages[0]) : null;
-        drawRoundedImage(ctx, img1, hMargin, vPadding, mainWidth, mainItemH, 24, 'cover', lowQuality);
-        const img2 = allImages[1] ? await loadImage(allImages[1]) : null;
-        drawRoundedImage(ctx, img2, hMargin, H - mainItemH - vPadding, mainWidth, mainItemH, 24, 'cover', lowQuality);
       }
     }
   }
 
-  if (pageIdx === 0 && currentTemplateId !== 'directory-flow' && currentTemplateId !== 'single-page-flow') {
+  if (pageIdx === 0 && currentTemplateId !== 'directory-flow' && currentTemplateId !== 'single-page-flow' && currentTemplateId !== 'grid-flow') {
     ctx.save();
     ctx.fillStyle = currentConfig.titleColor;
     ctx.font = `900 ${currentConfig.titleFontSize}px ${currentConfig.titleFontFamily}`;

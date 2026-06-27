@@ -37,11 +37,11 @@ describe('calcLayoutInfo', () => {
   });
 
   describe('grid-flow', () => {
-    it('封面 2 张', () => {
+    it('封面 2 张，内容页固定 2 张/页', () => {
       // 2 张图刚好放封面
-      expect(calcLayoutInfo('grid-flow', 2)).toEqual({ total: 1, perPage: 3, coverCount: 2 });
-      // 5 张图 → 封面 2 + 剩 3 张走自适应 → 降到 1 张/页 → 4 页
-      expect(calcLayoutInfo('grid-flow', 5)).toEqual({ total: 4, perPage: 1, coverCount: 2 });
+      expect(calcLayoutInfo('grid-flow', 2)).toEqual({ total: 1, perPage: 2, coverCount: 2 });
+      // 5 张图 → 封面 2 + 剩 3 张 → 内容页 ceil(3/2)=2 → 总 3 页
+      expect(calcLayoutInfo('grid-flow', 5)).toEqual({ total: 3, perPage: 2, coverCount: 2 });
     });
   });
 
